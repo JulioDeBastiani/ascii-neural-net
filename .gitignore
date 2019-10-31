@@ -227,3 +227,5 @@ pip-selfcheck.json
 .history
 
 # End of https://www.gitignore.io/api/c,c++,cmake,python,virtualenv,visualstudiocode
+
+build/
