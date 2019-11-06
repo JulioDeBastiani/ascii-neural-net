@@ -1,10 +1,9 @@
 #include <iostream>
 
-#include "ascii-neural-net/t.hpp"
+#include <ascii-neural-net/layers.hpp>
 
 int main()
 {
     std::cout << "IT LIVES!!!!!!" << std::endl;
-    test_func();
     return 0;
 }
