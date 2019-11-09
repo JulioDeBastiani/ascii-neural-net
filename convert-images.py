@@ -19,13 +19,13 @@ for fileName in filesVector:
     # loop por todos os pixeis
     for x in range(image.shape[0]):
         for y in range(image.shape[1]):
-            if (image[x,y].all() == 0): #pixel eh preto
+            if (not image[x,y].all()): #pixel eh preto
                 binary += '1'
             else:
                 binary += '0' #pixel nao eh preto
 
     bitPosition = ''
-    for x in range(0, 47):
+    for x in range(0, 35):
         if (changePosition == x):
             bitPosition += '1'
         else:
@@ -35,7 +35,7 @@ for fileName in filesVector:
 
     arquivo = open('EntrancesAndExits.txt', 'r')
     conteudo = arquivo.readlines()
-    conteudo.append(fileName[0] + ' | ' + binary + ' | ' + bitPosition + '\n')
+    conteudo.append(binary + ' ' + bitPosition + '\n')
     arquivo = open('EntrancesAndExits.txt', 'w')
     arquivo.writelines(conteudo)
     arquivo.close()
