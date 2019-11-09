@@ -80,7 +80,6 @@ namespace ann
         Flat _output_mat;
     };
 
-    template<typename ActivationFn>
     class Dense : public Layer
     {
     public:
@@ -100,11 +99,16 @@ namespace ann
             return _out_size;
         }
 
-        virtual Status foreward(const Flat& prev) = 0;
-        virtual const Flat& output() = 0;
-        virtual Status backprop(Flat prox) = 0;
-        virtual const Flat& backprop_output() = 0;
-        virtual Status update(Scalar learning_rate) = 0;
+        Status foreward(const Flat& prev)
+        {}
+        const Flat& output()
+        {}
+        Status backprop(Flat prox)
+        {}
+        const Flat& backprop_output()
+        {}
+        Status update(Scalar learning_rate)
+        {}
 
     private:
         Matrix _weights;

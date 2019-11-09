@@ -31,35 +31,25 @@ namespace ann
 
             int prev = 0;
 
-            while (getline(model_file, line))
-            {
-                std::vector<std::string> tokens;
-                boost::split(line, tokens, [](char c){ return c == ' '; });
+        //     while (getline(model_file, line))
+        //     {
+        //         std::vector<std::string> tokens;
+        //         boost::split(line, tokens, [](char c){ return c == ' '; });
 
-                if (tokens[0] == "Input")
-                {
-                    prev = std::stoi(tokens[1]);
-                    _layers.push_back(std::make_unique<Input>(prev));
-                    continue;
-                }
+        //         if (tokens[0] == "Input")
+        //         {
+        //             prev = std::stoi(tokens[1]);
+        //             _layers.push_back(std::make_unique<Input>(prev));
+        //             continue;
+        //         }
 
-                if (tokens[0] == "Dense")
-                {
-                    if (tokens[2] == "Sigmoid")
-                    {
-                        int c = std::stoi(tokens[1]);
-                        _layers.push_back(std::make_unique<Dense<Sigmoid>>(prev, c));
-                        prev = c;
-                    }
-
-                    if (tokens[2] == "ReLU")
-                    {
-                        int c = std::stoi(tokens[1]);
-                        _layers.push_back(std::make_unique<Dense<ReLU>>(prev, c));
-                        prev = c;
-                    }
-                }
-            }
+        //         if (tokens[0] == "Dense")
+        //         {
+        //             int c = std::stoi(tokens[1]);
+        //             _layers.push_back(std::make_unique<Dense>(prev, c));
+        //             prev = c;
+        //         }
+        //     }
         }
 
     //     Status load_checkpoint(std::string checkpoint_folder);

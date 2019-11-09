@@ -6,7 +6,6 @@
 
 namespace ann
 {
-    // TODO impl class
     // ? err level
     class Status
     {
@@ -17,18 +16,58 @@ namespace ann
             INCOMPATIBLE_SIZES = 1
         };
     
-        static Status OK();
-        static Status ERROR(error_codes code, std::string message);
+        static Status OK()
+        {
+            return Status();
+        }
 
-        bool ok() const;
-        bool err() const;
-        int code() const;
-        const std::string& mesage() const;
-        std::string to_string() const;
+        static Status ERROR(error_codes code, std::string message)
+        {
+            return Status(code, message);
+        }
+
+        bool ok() const
+        {
+            return _ok;
+        }
+
+        bool err() const
+        {
+            return !_ok;
+        }
+
+        int code() const
+        {
+            return _code;
+        }
+
+        const std::string& mesage() const
+        {
+            return _message;
+        }
+
+        std::string to_string() const
+        {
+            // TODO this could be better
+            return _message;
+        }
 
     private:
+        bool _ok;
         int _code;
         std::string _message;
+
+        Status():
+            _ok(true)
+        {
+        }
+
+        Status(error_codes code, std::string message):
+            _ok(false),
+            _code(code),
+            _message(message)
+        {
+        }
 
         // ? file, line & stacktrace
         // * boost might be useful for this
