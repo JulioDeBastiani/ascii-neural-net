@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,7 @@ namespace ann
     private:
         std::string _name;
     
-        std::vector<Layer> _layers;
+        std::vector<std::unique_ptr<Layer>> _layers;
 
         float _calculate_loss(std::vector<float> predicted_labels, std::vector<float> actual_labels);
         Status update_weights(float loss, float learning_rate);

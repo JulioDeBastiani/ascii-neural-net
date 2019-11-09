@@ -1,13 +1,21 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 project(proj-ascii-neural-net)
 
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Boost REQUIRED)
 
-add_executable(ascii-neural-net ascii-neural-net/main ascii-neural-net/t)
-target_include_directories(ascii-neural-net PRIVATE .)
+add_executable(ann
+    ascii-neural-net/activation-functions
+    ascii-neural-net/layers
+    ascii-neural-net/main
+    ascii-neural-net/model
+    ascii-neural-net/status
+    ascii-neural-net/types
+)
 
-# add_subdirectory(ascii-neural-net)
+target_include_directories(ann PRIVATE .)
 
-target_link_libraries(ascii-neural-net Eigen3::Eigen)
+target_link_libraries(ann Eigen3::Eigen)
+target_link_libraries(ann ${Boost_LIBRARIES})

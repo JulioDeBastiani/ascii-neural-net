@@ -1,9 +1,17 @@
 #include <iostream>
+#include <string>
 
-#include <ascii-neural-net/layers.hpp>
+#include <ascii-neural-net/model.hpp>
 
 int main()
 {
-    std::cout << "IT LIVES!!!!!!" << std::endl;
+    const std::string model_name = "model-a";
+
+    std::cout << "Model name: \"" << model_name << "\"" << std::endl;
+
+    ann::Model model(model_name);
+    model.load_model("./models/" + model_name + ".ann");
+
+
     return 0;
 }
