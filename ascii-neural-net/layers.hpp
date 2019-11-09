@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+#include <fstream>
 #include <vector>
 
 #include <ascii-neural-net/status.hpp>
@@ -16,14 +18,12 @@ namespace ann
         {
         }
 
-        virtual ~Layer() = 0;
-
-        inline int in_size()
+        inline int in_size() const
         {
             return _in_size;
         }
 
-        inline int out_size()
+        inline int out_size() const
         {
             return _out_size;
         }
@@ -33,6 +33,9 @@ namespace ann
         virtual Status backprop(Flat prox) = 0;
         virtual const Flat& backprop_output() = 0;
         virtual Status update(Scalar learning_rate) = 0;
+
+        virtual void serialize(std::ofstream& stream) const = 0;
+        virtual Status deserialize(std::ifstream& stream) = 0;
 
     protected:
         int _in_size;
@@ -76,6 +79,24 @@ namespace ann
             return Status::OK();
         }
 
+        void serialize(std::ofstream& stream) const
+        {
+            stream << "no weights\n";
+        }
+
+        Status deserialize(std::ifstream& stream)
+        {
+            std::string line;
+
+            if (!getline(stream, line))
+                return Status::ERROR(Status::error_codes::DESERIALIZATION_ERROR, "could not read");
+
+            if (line != "no weights")
+                return Status::ERROR(Status::error_codes::DESERIALIZATION_ERROR, "");
+
+            return Status::OK();
+        }
+
     private:
         Flat _output_mat;
     };
@@ -86,7 +107,7 @@ namespace ann
         Dense(int in_size, int out_size):
             Layer(in_size, out_size)
         {
-            _weights.resize(in_size, out_size);
+            _weights = Matrix::Random(in_size, out_size);
         }
 
         inline int in_size()
@@ -109,6 +130,26 @@ namespace ann
         {}
         Status update(Scalar learning_rate)
         {}
+
+        void serialize(std::ofstream& stream) const
+        {
+            stream << _weights << "\n";
+        }
+
+        Status deserialize(std::ifstream& stream)
+        {
+            std::string line;
+            
+            for (int row = 0; row < _in_size; row++)
+            {
+                for (int col = 0; col < _out_size; col++)
+                {
+                    Scalar val;
+                    stream >> val;
+                    _weights(row, col) = val;
+                }
+            }
+        }
 
     private:
         Matrix _weights;

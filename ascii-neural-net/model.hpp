@@ -9,15 +9,14 @@
 
 namespace ann
 {
-    // TODO impl class
     // TODO rule of five
-    // TODO fix tensor types
     class Model
     {
     public:
         Model(std::string name);
 
         Status load_model(std::string filename);
+        Status save_checkpoint(std::string checkpoint_folder);
         Status load_checkpoint(std::string checkpoint_folder);
 
         // TODO fix inputs & outputs to tensors or mats

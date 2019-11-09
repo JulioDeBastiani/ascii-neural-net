@@ -13,7 +13,8 @@ namespace ann
         enum error_codes
         {
             PLACEHOLDER = 0,
-            INCOMPATIBLE_SIZES = 1
+            INCOMPATIBLE_SIZES = 1,
+            DESERIALIZATION_ERROR = 2
         };
     
         static Status OK()
