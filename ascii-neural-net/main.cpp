@@ -11,11 +11,8 @@ int main()
 
     ann::Model model(model_name);
     auto status = model.load_model("../models/" + model_name + ".ann");
-    status = model.save_checkpoint("../checkpoints");
-    status = model.load_checkpoint("../checkpoints");
 
-    if (status.err())
-        std::cout << "sigh" << std::endl;
+    
 
     return 0;
 }

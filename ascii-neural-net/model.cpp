@@ -95,6 +95,36 @@ namespace ann
             return Status::OK();
         }
 
+        void Model::forward(const RowVector& input)
+        {
+            int total_layers = _layers.size();
+            
+            if (total_layers == 0)
+            {
+                std::cout << "Uninitialized network" << std::endl;
+                return;
+            }
+
+            if (input.rows() != _layers[0]->in_size())
+            {
+                std::cout << "Invalid input shape" << std::endl;
+                return;
+            }
+
+            _layers[0]->forward(input);
+
+            for (int i = 1; i < total_layers; i++)
+            {
+                auto status = _layers[i]->forward(_layers[i - 1]->output());
+
+                if (status.err())
+                {
+                    std::cout << "forwarding error" << std::endl;
+                    return;
+                }
+            }
+        }
+
     //     // TODO fix inputs & outputs to tensors or mats
     //     std::vector<float> predict(std::vector<int> input);
     //     Status fit(std::vector<std::vector<int>> train_date, std::vector<std::vector<float>> train_labels, float learning_rate, int epochs, std::string checkpoints_folder);

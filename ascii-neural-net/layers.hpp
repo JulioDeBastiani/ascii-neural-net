@@ -28,10 +28,10 @@ namespace ann
             return _out_size;
         }
 
-        virtual Status foreward(const Flat& prev) = 0;
-        virtual const Flat& output() = 0;
-        virtual Status backprop(Flat prox) = 0;
-        virtual const Flat& backprop_output() = 0;
+        virtual Status forward(const RowVector& prev) = 0;
+        virtual const RowVector& output() = 0;
+        virtual Status backprop(RowVector prox) = 0;
+        virtual const RowVector& backprop_output() = 0;
         virtual Status update(Scalar learning_rate) = 0;
 
         virtual void serialize(std::ofstream& stream) const = 0;
@@ -51,25 +51,25 @@ namespace ann
             _output_mat.resize(size);
         }
 
-        Status foreward(const Flat& prev)
+        Status forward(const RowVector& prev)
         {
-            if (prev.rows() != 1 || prev.cols() != _in_size)
+            if (prev.rows() != _in_size || prev.cols() != 1)
                 return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
             
             _output_mat = prev;
         }
 
-        const Flat& output()
+        const RowVector& output()
         {
             return _output_mat;
         }
 
-        Status backprop(Flat prox)
+        Status backprop(RowVector prox)
         {
             return Status::OK();
         }
 
-        const Flat& backprop_output()
+        const RowVector& backprop_output()
         {
             // TODO
         }
@@ -98,7 +98,7 @@ namespace ann
         }
 
     private:
-        Flat _output_mat;
+        RowVector _output_mat;
     };
 
     class Dense : public Layer
@@ -120,14 +120,33 @@ namespace ann
             return _out_size;
         }
 
-        Status foreward(const Flat& prev)
+        Status forward(const RowVector& prev)
+        {
+            const int nobs = prev.cols();
+
+            // calculate neuron activations
+            _z.resize(this->_out_size, nobs);
+            _z.noalias() = _weights * prev.transpose();
+
+            // TODO bias would be nice
+
+            // apply softmax activation function
+            // TODO support other activation functions
+            _forward_output.resize(this->_out_size, nobs);
+            _forward_output.array() = Scalar(1) / (Scalar(1) + (-_z.array()).exp());
+        }
+
+        const RowVector& output()
+        {
+            return _forward_output;
+        }
+
+        Status backprop(RowVector prox)
         {}
-        const Flat& output()
+
+        const RowVector& backprop_output()
         {}
-        Status backprop(Flat prox)
-        {}
-        const Flat& backprop_output()
-        {}
+
         Status update(Scalar learning_rate)
         {}
 
@@ -153,5 +172,7 @@ namespace ann
 
     private:
         Matrix _weights;
+        Matrix _z;
+        Matrix _forward_output;
     };
 }

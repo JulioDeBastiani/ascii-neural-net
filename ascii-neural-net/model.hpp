@@ -19,9 +19,10 @@ namespace ann
         Status save_checkpoint(std::string checkpoint_folder);
         Status load_checkpoint(std::string checkpoint_folder);
 
-        // TODO fix inputs & outputs to tensors or mats
-        std::vector<float> predict(std::vector<int> input);
-        Status fit(std::vector<std::vector<int>> train_date, std::vector<std::vector<float>> train_labels, float learning_rate, int epochs, std::string checkpoints_folder);
+        void forward(const RowVector& input);
+
+        // std::vector<float> predict(std::vector<int> input);
+        // Status fit(std::vector<std::vector<int>> train_date, std::vector<std::vector<float>> train_labels, float learning_rate, int epochs, std::string checkpoints_folder);
         
     private:
         std::string _name;
