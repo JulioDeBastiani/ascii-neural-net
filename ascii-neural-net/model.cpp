@@ -9,131 +9,218 @@
 
 namespace ann
 {
-        Model::Model(std::string name):
-            _name(name)
+    Model::Model(std::string name):
+        _name(name)
+    {
+    }
+
+    Status Model::load_model(std::string filename)
+    {
+        std::ifstream model_file;
+        model_file.open(filename);
+
+        if (!model_file.is_open())
         {
+            std::cout << "could not open file \"" << filename << "\"" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "");
         }
 
-        Status Model::load_model(std::string filename)
+        _layers.clear();
+
+        std::string line;
+
+        int prev = 0;
+
+        while (getline(model_file, line))
         {
-            std::ifstream model_file;
-            model_file.open(filename);
+            std::vector<std::string> tokens;
+            boost::split(tokens, line, [](char c){ return c == ' '; });
 
-            if (!model_file.is_open())
+            if (tokens[0] == "Input")
             {
-                std::cout << "could not open file \"" << filename << "\"" << std::endl;
-                return Status::ERROR(Status::error_codes::PLACEHOLDER, "");
+                prev = std::stoi(tokens[1]);
+                _layers.push_back(std::make_unique<Input>(prev));
+                std::cout << "Input: " << prev << std::endl;
+                continue;
             }
 
-            _layers.clear();
-
-            std::string line;
-
-            int prev = 0;
-
-            while (getline(model_file, line))
+            if (tokens[0] == "Dense")
             {
-                std::vector<std::string> tokens;
-                boost::split(tokens, line, [](char c){ return c == ' '; });
-
-                if (tokens[0] == "Input")
-                {
-                    prev = std::stoi(tokens[1]);
-                    _layers.push_back(std::make_unique<Input>(prev));
-                    std::cout << "Input: " << prev << std::endl;
-                    continue;
-                }
-
-                if (tokens[0] == "Dense")
-                {
-                    int c = std::stoi(tokens[1]);
-                    _layers.push_back(std::make_unique<Dense>(prev, c));
-                    std::cout << "Dense: " << c << std::endl;
-                    prev = c;
-                    continue;
-                }
+                int c = std::stoi(tokens[1]);
+                _layers.push_back(std::make_unique<Dense>(prev, c));
+                std::cout << "Dense: " << c << std::endl;
+                prev = c;
+                continue;
             }
-
-            return Status::OK();
         }
 
-        Status Model::save_checkpoint(std::string checkpoint_folder)
+        return Status::OK();
+    }
+
+    Status Model::save_checkpoint(std::string checkpoint_folder)
+    {
+        std::ofstream file;
+        file.open(checkpoint_folder + "/" + _name + ".checkpoint", std::ios_base::out);
+
+        if (!file.is_open())
         {
-            std::ofstream file;
-            file.open(checkpoint_folder + "/" + _name + ".checkpoint", std::ios_base::out);
-
-            if (!file.is_open())
-            {
-                std::cout << "could not open file" << std::endl;
-                return Status::ERROR(Status::error_codes::PLACEHOLDER, "could not open file");
-            }
-
-            for (auto& layer: _layers)
-            {
-                layer->serialize(file);
-            }
-
-            return Status::OK();
+            std::cout << "could not open file" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "could not open file");
         }
 
-        Status Model::load_checkpoint(std::string checkpoint_folder)
+        for (auto& layer: _layers)
         {
-            std::ifstream checkpoint;
-            checkpoint.open(checkpoint_folder + "/" + _name + ".checkpoint");
-
-            if (!checkpoint.is_open())
-            {
-                std::cout << "could not open file \"" << checkpoint_folder << "\"" << std::endl;
-                return Status::ERROR(Status::error_codes::PLACEHOLDER, "");
-            }
-
-            for (auto& layer: _layers)
-            {
-                layer->deserialize(checkpoint);
-            }
-
-            return Status::OK();
+            layer->serialize(file);
         }
 
-        void Model::forward(const RowVector& input)
+        return Status::OK();
+    }
+
+    Status Model::load_checkpoint(std::string checkpoint_folder)
+    {
+        std::ifstream checkpoint;
+        checkpoint.open(checkpoint_folder + "/" + _name + ".checkpoint");
+
+        if (!checkpoint.is_open())
         {
-            int total_layers = _layers.size();
-            
-            if (total_layers == 0)
-            {
-                std::cout << "Uninitialized network" << std::endl;
-                return;
-            }
+            std::cout << "could not open file \"" << checkpoint_folder << "\"" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "");
+        }
 
-            if (input.rows() != _layers[0]->in_size())
-            {
-                std::cout << "Invalid input shape" << std::endl;
-                return;
-            }
+        for (auto& layer: _layers)
+        {
+            layer->deserialize(checkpoint);
+        }
 
-            _layers[0]->forward(input);
+        return Status::OK();
+    }
 
-            for (int i = 1; i < total_layers; i++)
+    Status Model::fit(Dataset& data, Scalar learning_rate, int epochs, std::string checkpoints_folder)
+    {
+        std::cout << "training model \"" << _name << "\"" << std::endl;
+
+        for (int epoch = 1; epoch <= epochs; epoch++)
+        {
+            std::cout << "epoch " << epoch << "/" << epochs << std::endl;
+
+            while (!data.epoch_end())
             {
-                auto status = _layers[i]->forward(_layers[i - 1]->output());
+                auto d = data.next();
+
+                auto status = _forward(d->input());
 
                 if (status.err())
                 {
-                    std::cout << "forwarding error" << std::endl;
-                    return;
+                    std::cout << "Training error on forward" << std::endl;
+                    return status;
                 }
+
+                status = _backprop(d->expected_output());
+
+                if (status.err())
+                {
+                    std::cout << "Training error on backprop" << std::endl;
+                    return status;
+                }
+
+                status = _update(learning_rate);
+
+
+                if (status.err())
+                {
+                    std::cout << "Training error on update" << std::endl;
+                    return status;
+                }
+            }
+
+            save_checkpoint(checkpoints_folder);
+        }
+
+        return Status::OK();
+    }
+
+    Status Model::_forward(const RowVector& input)
+    {
+        int total_layers = _layers.size();
+            
+        if (total_layers == 0)
+        {
+            std::cout << "Uninitialized network" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "Uninitialized network");
+        }
+
+        if (input.rows() != _layers[0]->in_size())
+        {
+            std::cout << "Invalid input shape" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "Invalid input shape");
+        }
+
+        _layers[0]->forward(input);
+
+        for (int i = 1; i < total_layers; i++)
+        {
+            auto status = _layers[i]->forward(_layers[i - 1]->output());
+
+            if (status.err())
+            {
+                std::cout << "forwarding error" << std::endl;
+                return status;
             }
         }
 
-    //     // TODO fix inputs & outputs to tensors or mats
-    //     std::vector<float> predict(std::vector<int> input);
-    //     Status fit(std::vector<std::vector<int>> train_date, std::vector<std::vector<float>> train_labels, float learning_rate, int epochs, std::string checkpoints_folder);
-        
-    // private:
-    //     std::string _name;
-    
-    //     std::vector<Layer> _layers;
+        _output = _layers[total_layers - 1]->output();
 
-    //     float _calculate_loss(std::vector<float> predicted_labels, std::vector<float> actual_labels);
-    //     Status update_weights(float loss, float learning_rate);
+        return Status::OK();
+    }
+
+    Status Model::_backprop(const RowVector& expected_output)
+    {
+        RowVector error = expected_output - _output;
+        int total_layers = _layers.size();
+
+        for (int i = total_layers - 1; 1 >= 0; i--)
+        {
+            auto& layer = _layers[i];
+
+            auto status = layer->backprop(error);
+
+            if (status.err())
+            {
+                std::cout << "backpropagation error" << std::endl;
+                return status;
+            }
+
+            error = layer->backprop_output();
+        }
+
+        return Status::OK();
+    }
+
+    Status Model::_update(Scalar learning_rate)
+    {
+        int total_layers = _layers.size();
+            
+        if (total_layers == 0)
+        {
+            std::cout << "Uninitialized network" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "Uninitialized network");
+        }
+
+        RowVector output = _layers[0]->output();
+
+        for (int i = 1; i < total_layers; i++)
+        {
+            auto status = _layers[i]->update(output, learning_rate);
+
+            if (status.err())
+            {
+                std::cout << "update error" << std::endl;
+                return status;
+            }
+
+            output = _layers[i]->output();
+        }
+
+        return Status::OK();
+    }
 }

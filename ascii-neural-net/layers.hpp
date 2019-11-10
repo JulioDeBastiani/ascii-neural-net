@@ -32,7 +32,7 @@ namespace ann
         virtual const RowVector& output() = 0;
         virtual Status backprop(RowVector prox) = 0;
         virtual const RowVector& backprop_output() = 0;
-        virtual Status update(Scalar learning_rate) = 0;
+        virtual Status update(const RowVector& prev, Scalar learning_rate) = 0;
 
         virtual void serialize(std::ofstream& stream) const = 0;
         virtual Status deserialize(std::ifstream& stream) = 0;
@@ -71,10 +71,10 @@ namespace ann
 
         const RowVector& backprop_output()
         {
-            // TODO
+            return _output_mat;
         }
 
-        Status update(Scalar learning_rate)
+        Status update(const RowVector& prev, Scalar learning_rate)
         {
             return Status::OK();
         }
@@ -107,7 +107,7 @@ namespace ann
         Dense(int in_size, int out_size):
             Layer(in_size, out_size)
         {
-            _weights = Matrix::Random(in_size, out_size);
+            _weights = Matrix::Random(out_size, in_size);
         }
 
         inline int in_size()
@@ -122,17 +122,15 @@ namespace ann
 
         Status forward(const RowVector& prev)
         {
-            const int nobs = prev.cols();
-
             // calculate neuron activations
-            _z.resize(this->_out_size, nobs);
-            _z.noalias() = _weights * prev.transpose();
+            _z.resize(_out_size, 1);
+            _z.noalias() = _weights * prev;
 
             // TODO bias would be nice
 
             // apply softmax activation function
             // TODO support other activation functions
-            _forward_output.resize(this->_out_size, nobs);
+            _forward_output.resize(_out_size, 1);
             _forward_output.array() = Scalar(1) / (Scalar(1) + (-_z.array()).exp());
         }
 
@@ -142,13 +140,37 @@ namespace ann
         }
 
         Status backprop(RowVector prox)
-        {}
+        {
+            if (prox.rows() != _out_size)
+                return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
+            
+            // delta for this layer
+            _delta.resize(_out_size, 1);
+            _delta.noalias() = _forward_output.cwiseProduct(RowVector::Ones(_out_size) - _forward_output).cwiseProduct(prox);
+
+            // error factor for the previous layer
+            _error.resize(_in_size, 1);
+            _error.noalias() = (_delta.transpose() * _weights).transpose();
+
+            return Status::OK();
+        }
 
         const RowVector& backprop_output()
-        {}
+        {
+            return _error;
+        }
 
-        Status update(Scalar learning_rate)
-        {}
+        Status update(const RowVector& prev, Scalar learning_rate)
+        {
+            if (prev.rows() != _in_size)
+                return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
+
+            if (_error.rows() != _out_size)
+                return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
+            
+            _weights.noalias() += learning_rate * (prev * _error);
+            return Status::OK();
+        }
 
         void serialize(std::ofstream& stream) const
         {
@@ -173,6 +195,9 @@ namespace ann
     private:
         Matrix _weights;
         Matrix _z;
-        Matrix _forward_output;
+        RowVector _forward_output;
+
+        RowVector _delta;
+        RowVector _error;
     };
 }
