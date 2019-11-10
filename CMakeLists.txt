@@ -8,6 +8,7 @@ find_package(Boost REQUIRED)
 
 add_executable(ann
     ascii-neural-net/activation-functions
+    ascii-neural-net/dataset
     ascii-neural-net/layers
     ascii-neural-net/main
     ascii-neural-net/model
