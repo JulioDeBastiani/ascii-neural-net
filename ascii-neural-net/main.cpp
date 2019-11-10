@@ -16,5 +16,15 @@ int main()
     ann::Dataset dataset("../EntrancesAndExits.txt");
     dataset.shuffle();
 
+    auto status = model.fit(dataset, 3e-1, 1000, "../checkpoints");
+
+    if (status.err())
+    {
+        std::cout << "failed" << std::endl;
+        return 1;
+    }
+
+    ann::Dataset dataset("../testDataset.txt");
+
     return 0;
 }

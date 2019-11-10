@@ -20,8 +20,10 @@ namespace ann
         Status save_checkpoint(std::string checkpoint_folder);
         Status load_checkpoint(std::string checkpoint_folder);
 
+        const RowVector& predict(const RowVector& input);
 
         Status fit(Dataset& data, Scalar learning_rate, int epochs, std::string checkpoints_folder);
+        void eval(Dataset& data, bool verbose);
         
     private:
         std::string _name;

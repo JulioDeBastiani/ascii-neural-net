@@ -83,6 +83,14 @@ namespace ann
         return Status::OK();
     }
 
+    const RowVector& Model::predict(const RowVector& input)
+    {
+        int total_layers = _layers.size();
+
+        auto status = _forward(input);
+        return _layers[total_layers]->output();
+    }
+
     Status Model::fit(Dataset& data, Scalar learning_rate, int epochs, std::string checkpoints_folder)
     {
         std::cout << "training model \"" << _name << "\"" << std::endl;
@@ -121,14 +129,63 @@ namespace ann
                 }
             }
 
+            eval(data, false);
+
             std::stringstream ss;
             ss << ".checkpoint." << std::setw(3) << std::setfill('0') << epoch;
 
             _save_checkpoint(checkpoints_folder, ss.str());
             _save_checkpoint(checkpoints_folder, ".checkpoint");
+
+            std::cout << "saved checkpoint" << std::endl;
         }
 
         return Status::OK();
+    }
+
+    int argmax(const RowVector& vec)
+    {
+        int rows = vec.rows();
+        int max_index = 0;
+        Scalar  max_val = vec(0, 0);
+
+        for (int i = 1; i < rows; i++)
+        {
+            Scalar val = vec(i, 0);
+
+            if (val > max_val)
+            {
+                max_val = val;
+                max_index = i;
+            }
+        }
+
+        return max_index;
+    }
+
+    void Model::eval(Dataset& data, bool verbose)
+    {
+        double correct = 0;
+        double incorrect = 0;
+        
+        while (!data.epoch_end())
+        {
+            auto d = data.next();
+            auto output = predict(d->input());
+            auto predicted = argmax(output);
+            auto truth = argmax(d->expected_output());
+
+            if (verbose)
+                std::cout << "expected \"" << truth << "\", predicted: \"" << predicted << "\"\n";
+
+            if (predicted == truth)
+                correct += 1;
+            else
+                incorrect += 1;
+        }
+
+        double precision = (correct / (correct + incorrect)) * 100;
+        std::cout << "precision: " << precision << std::endl;
     }
 
     Status Model::_forward(const RowVector& input)
