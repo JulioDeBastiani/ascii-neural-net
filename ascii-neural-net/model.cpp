@@ -1,7 +1,9 @@
 #include <ascii-neural-net/model.hpp>
 
+#include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -59,21 +61,7 @@ namespace ann
 
     Status Model::save_checkpoint(std::string checkpoint_folder)
     {
-        std::ofstream file;
-        file.open(checkpoint_folder + "/" + _name + ".checkpoint", std::ios_base::out);
-
-        if (!file.is_open())
-        {
-            std::cout << "could not open file" << std::endl;
-            return Status::ERROR(Status::error_codes::PLACEHOLDER, "could not open file");
-        }
-
-        for (auto& layer: _layers)
-        {
-            layer->serialize(file);
-        }
-
-        return Status::OK();
+        return _save_checkpoint(checkpoint_folder, ".checkpoint");
     }
 
     Status Model::load_checkpoint(std::string checkpoint_folder)
@@ -133,7 +121,11 @@ namespace ann
                 }
             }
 
-            save_checkpoint(checkpoints_folder);
+            std::stringstream ss;
+            ss << ".checkpoint." << std::setw(3) << std::setfill('0') << epoch;
+
+            _save_checkpoint(checkpoints_folder, ss.str());
+            _save_checkpoint(checkpoints_folder, ".checkpoint");
         }
 
         return Status::OK();
@@ -222,5 +214,24 @@ namespace ann
         }
 
         return Status::OK();
+    }
+
+    Status Model::_save_checkpoint(std::string checkpoint_folder, std::string extension)
+    {
+        std::ofstream file;
+        file.open(checkpoint_folder + "/" + _name + extension, std::ios_base::out);
+
+        if (!file.is_open())
+        {
+            std::cout << "could not open file" << std::endl;
+            return Status::ERROR(Status::error_codes::PLACEHOLDER, "could not open file");
+        }
+
+        for (auto& layer: _layers)
+        {
+            layer->serialize(file);
+        }
+
+        return Status::OK();       
     }
 }

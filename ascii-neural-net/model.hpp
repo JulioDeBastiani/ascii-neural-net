@@ -33,5 +33,7 @@ namespace ann
         Status _forward(const RowVector& input);
         Status _backprop(const RowVector& expected_output);
         Status _update(Scalar learning_rate);
+
+        Status _save_checkpoint(std::string checkpoint_folder, std::string extension);
     };
 }
