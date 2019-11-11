@@ -55,10 +55,10 @@ namespace ann
         if (prev.rows() != _in_size)
             return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
 
-        if (_error.rows() != _out_size)
+        if (_delta.rows() != _out_size)
             return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
             
-        _weights.noalias() += learning_rate * (prev * _error);
+        _weights.noalias() += learning_rate * (_delta * prev.transpose());
         return Status::OK();
     }
 

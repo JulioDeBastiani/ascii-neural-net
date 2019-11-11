@@ -57,6 +57,7 @@ namespace ann
                 return Status::ERROR(Status::error_codes::INCOMPATIBLE_SIZES, "");
             
             _output_mat = prev;
+            return Status::OK();
         }
 
         const RowVector& output()

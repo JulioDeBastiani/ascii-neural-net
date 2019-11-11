@@ -11,12 +11,12 @@ int main()
     std::cout << "Model name: \"" << model_name << "\"" << std::endl;
 
     ann::Model model(model_name);
-    auto status = model.load_model("../models/" + model_name + ".ann");
+    auto status = model.load_model("/home/julio/Documents/ucs/ascii-neural-net/models/" + model_name + ".ann");
 
-    ann::Dataset dataset("../EntrancesAndExits.txt");
+    ann::Dataset dataset("/home/julio/Documents/ucs/ascii-neural-net/EntrancesAndExits.txt");
     dataset.shuffle();
 
-    auto status = model.fit(dataset, 3e-1, 1000, "../checkpoints");
+    status = model.fit(dataset, 3e-1, 1000, "/home/julio/Documents/ucs/ascii-neural-net/checkpoints");
 
     if (status.err())
     {
@@ -24,7 +24,7 @@ int main()
         return 1;
     }
 
-    ann::Dataset dataset("../testDataset.txt");
+    ann::Dataset test_dataset("/home/julio/Documents/ucs/ascii-neural-net/testDataset.txt");
 
     return 0;
 }

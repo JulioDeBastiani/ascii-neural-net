@@ -88,7 +88,7 @@ namespace ann
         int total_layers = _layers.size();
 
         auto status = _forward(input);
-        return _layers[total_layers]->output();
+        return _layers[total_layers - 1]->output();
     }
 
     Status Model::fit(Dataset& data, Scalar learning_rate, int epochs, std::string checkpoints_folder)
@@ -98,6 +98,9 @@ namespace ann
         for (int epoch = 1; epoch <= epochs; epoch++)
         {
             std::cout << "epoch " << epoch << "/" << epochs << std::endl;
+
+            data.reset_epoch();
+            data.shuffle();
 
             while (!data.epoch_end())
             {
@@ -129,12 +132,17 @@ namespace ann
                 }
             }
 
+            data.reset_epoch();
             eval(data, false);
 
-            std::stringstream ss;
-            ss << ".checkpoint." << std::setw(3) << std::setfill('0') << epoch;
+            if (epoch % 50 == 0)
+            {
+                std::stringstream ss;
+                ss << ".checkpoint." << std::setw(3) << std::setfill('0') << epoch;
 
-            _save_checkpoint(checkpoints_folder, ss.str());
+                _save_checkpoint(checkpoints_folder, ss.str());
+            }
+
             _save_checkpoint(checkpoints_folder, ".checkpoint");
 
             std::cout << "saved checkpoint" << std::endl;
@@ -227,7 +235,7 @@ namespace ann
         RowVector error = expected_output - _output;
         int total_layers = _layers.size();
 
-        for (int i = total_layers - 1; 1 >= 0; i--)
+        for (int i = total_layers - 1; i >= 0; i--)
         {
             auto& layer = _layers[i];
 
