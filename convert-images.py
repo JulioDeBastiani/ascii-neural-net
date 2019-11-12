@@ -19,13 +19,13 @@ for fileName in filesVector:
     # loop por todos os pixeis
     for x in range(image.shape[0]):
         for y in range(image.shape[1]):
-            if (not image[x,y].all()): #pixel eh preto
+            if (image[x,y].all() == 0): #pixel eh preto
                 binary += '1'
             else:
                 binary += '0' #pixel nao eh preto
 
     bitPosition = ''
-    for x in range(0, 35):
+    for x in range(0, 36):
         if (changePosition == x):
             bitPosition += '1'
         else:

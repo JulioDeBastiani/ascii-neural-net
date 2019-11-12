@@ -70,7 +70,7 @@ for x in range(0,6):
             else:
                 binary += '0' #pixel nao eh preto
     content.append(binary)
-    binaryVec.append(' 00000000000000000000000000000000000')
+    binaryVec.append(' 000000000000000000000000000000000000')
 
 i = 0
 for line in content:
