@@ -11,6 +11,7 @@ add_executable(ann
     ascii-neural-net/dataset
     ascii-neural-net/layers
     ascii-neural-net/main
+    ascii-neural-net/metrics
     ascii-neural-net/model
     ascii-neural-net/status
     ascii-neural-net/types

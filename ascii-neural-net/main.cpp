@@ -3,6 +3,7 @@
 
 #include <ascii-neural-net/model.hpp>
 #include <ascii-neural-net/dataset.hpp>
+#include <ascii-neural-net/metrics.hpp>
 
 int main()
 {
@@ -28,6 +29,8 @@ int main()
 
     ann::Dataset test_dataset("/home/julio/Documents/ucs/ascii-neural-net/testDataset.txt");
     model.eval(test_dataset, true);
+    test_dataset.reset_epoch();
+    ann::create_confusion_matrix(model, test_dataset);
 
     return 0;
 }
