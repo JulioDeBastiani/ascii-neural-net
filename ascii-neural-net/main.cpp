@@ -16,7 +16,7 @@ int main()
     ann::Dataset dataset("/home/julio/Documents/ucs/ascii-neural-net/EntrancesAndExits.txt");
     dataset.shuffle();
 
-    status = model.fit(dataset, 3e-1, 1000, "/home/julio/Documents/ucs/ascii-neural-net/checkpoints");
+    status = model.fit(dataset, 1e-1, 1000, "/home/julio/Documents/ucs/ascii-neural-net/checkpoints");
 
     if (status.err())
     {
@@ -24,7 +24,10 @@ int main()
         return 1;
     }
 
+    // model.load_checkpoint("/home/julio/Documents/ucs/ascii-neural-net/checkpoints");
+
     ann::Dataset test_dataset("/home/julio/Documents/ucs/ascii-neural-net/testDataset.txt");
+    model.eval(test_dataset, true);
 
     return 0;
 }

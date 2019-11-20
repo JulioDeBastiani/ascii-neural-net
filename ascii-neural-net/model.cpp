@@ -183,13 +183,15 @@ namespace ann
             auto predicted = argmax(output);
             auto truth = argmax(d->expected_output());
 
-            if (verbose)
-                std::cout << "expected \"" << truth << "\", predicted: \"" << predicted << "\"\n";
-
             if (predicted == truth)
                 correct += 1;
             else
+            {
                 incorrect += 1;
+
+                if (verbose)
+                    std::cout << "expected \"" << truth << "\", predicted: \"" << predicted << "\"\n";
+            }
         }
 
         double precision = (correct / (correct + incorrect)) * 100;

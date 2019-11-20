@@ -93,7 +93,7 @@ namespace ann
         Dense(int in_size, int out_size):
             Layer(in_size, out_size)
         {
-            _weights = Matrix::Random(out_size, in_size);
+            _weights = Matrix::Random(out_size, in_size).cwiseAbs() * 0.1;
         }
 
         inline int in_size()

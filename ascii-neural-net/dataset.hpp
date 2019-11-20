@@ -10,7 +10,7 @@
 #include <ascii-neural-net/types.hpp>
 
 #define INPUT_LENGTH 48
-#define OUTPUT_LENGTH 35
+#define OUTPUT_LENGTH 36
 
 namespace ann
 {
